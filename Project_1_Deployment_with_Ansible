@@ -1,0 +1,34 @@
+---
+-name: Intsall nginx an Deploy HTML File
+ hosts: all
+ become: yes
+ 
+ tasks:
+   - name: Install Nginx 
+     yum:
+      name: nginx
+      state: present
+
+   - name: Start Nginx
+     service:
+       name: nginx
+       state: started
+       enabled: yes
+   
+   - name: Deploy HTML file
+     copy: 
+       content: |
+        <!DOCTYPE html>
+        <html>
+        <head>
+           <title> My Nginx Sevrer </title>
+        </head>
+        <body>
+           <h1> Hello From Ansibke </h1>
+           <p> Nginx was installed using Ansible </P>
+        </body>
+        </html>
+      dest: /usr/share/nginx/html/index.html
+      owner: root
+      group: root
+      mode: '0644' 

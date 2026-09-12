@@ -1,0 +1,92 @@
+# Day 14 MINI PROJECT
+
+## Terraform - Create EC2 (any instance type)
+
+provider "aws" {
+  region = "ap-south-1"
+}
+
+
+resource "aws_vpc" "MyVPC" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "Day-14-VPC"
+  }
+}
+
+resource "aws_subnet" "MySub" {
+  vpc_id                  = aws_vpc.MyVPC.id
+  cidr_block              = "10.0.0.0/24"
+  availability_zone       = "ap-sout-1a"
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "Day14-Subnet"
+  }
+}
+
+resource "aws_internet_gateway" "igw" {
+  vpc_id = aws_vpc.MyVPC.id
+
+  tags = {
+    Name = "Day14-IGW"
+  }
+}
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.MyVPC.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
+  }
+
+  tags = {
+    Name = "Day14-route"
+  }
+}
+
+resource "aws_route_table_association" "apublic" {
+  subnet_id      = aws_subnet.MySub.id
+  route_table_id = aws_route_table.public.id
+}
+
+
+resource "aws_security_group" "MySG" {
+  name   = "day-14-sg"
+  vpc_id = aws_vpc.MyVPC.id
+
+  ingress {
+    description = "SSH"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Day-14-SG"
+  }
+}
+
+
+resource "aws_instance" "MyEC2" {
+  ami           = "ami-0abdc1231abcdc"
+  instance_type = "c5.xlarge"
+  key_name      = "ans"
+  subnet_id              = aws_subnet.MySub.id
+  vpc_security_group_ids = [aws_security_group.MySG.id]
+
+  tags = {
+    Name = "Day-14-EC2"
+  }
+}
+
+
